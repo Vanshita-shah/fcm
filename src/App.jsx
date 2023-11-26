@@ -8,9 +8,34 @@ import { toast, ToastContainer } from "react-toastify";
 import Message from "./components/Message";
 import "react-toastify/dist/ReactToastify.css";
 
+
 function App() {
   const [count, setCount] = useState(0);
   const { VITE_APP_VAPID_KEY } = import.meta.env;
+
+  useEffect(() => {
+    let registration;
+
+    // Register the service worker
+    navigator.serviceWorker
+      .register('/firebase-messaging-sw.js')
+      .then((reg) => {
+        console.log('Service Worker registered with scope:', reg.scope);
+        registration = reg;
+      })
+      .catch((error) => {
+        console.error('Error registering service worker:', error);
+      });
+
+    // Cleanup: Unregister the service worker when the component is unmounted
+    return () => {
+      if (registration) {
+        registration.unregister().then(() => {
+          console.log('Service Worker unregistered');
+        });
+      }
+    };
+  }, [])
 
   async function requestPermission() {
     //requesting permission using Notification API
@@ -29,14 +54,19 @@ function App() {
     }
   }
 
-  useEffect(() => {
-    requestPermission();
-  }, []);
 
-  onMessage(messaging, (payload) => {
-    console.log("incoming msg");
-    toast(<Message notification={payload.notification} />);
-  });
+  useEffect(() => {
+    const handleTokenAndNotification = async () => {
+      await requestPermission();
+  
+      onMessage(messaging, (payload) => {
+        console.log("incoming msg");
+        toast(<Message notification={payload.notification} />);
+      });
+    };
+  
+    handleTokenAndNotification();
+  }, []);
 
   return (
     <>
