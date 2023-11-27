@@ -14,6 +14,7 @@ const firebaseConfig = {
 };
 
 console.log(firebaseConfig)
+const swUrl = `${import.meta.env.BASE_URL}/firebase-messaging-sw.js?${firebaseConfig}`;
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
